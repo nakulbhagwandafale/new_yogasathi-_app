@@ -10,7 +10,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 
 export const supabase = createClient(SUPABASE_URL || 'https://placeholder.supabase.co', SUPABASE_ANON_KEY || 'placeholder');
 
-// --- Helper Functions to Handle Responses ---
+// --- Helper Functions ---
 const handleResponse = ({ data, error }, functionName) => {
     if (error) {
         console.error(`Error in ${functionName}:`, error.message);
@@ -18,6 +18,12 @@ const handleResponse = ({ data, error }, functionName) => {
     }
     return { success: true, error: null, data };
 };
+
+async function getAuthUserId() {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data?.user) return null;
+    return data.user.id;
+}
 
 // --- Authentication Operations ---
 
@@ -72,9 +78,13 @@ export async function getSession() {
 
 export async function checkAssessmentExists() {
     try {
+        const userId = await getAuthUserId();
+        if (!userId) return { success: false, exists: false, error: 'User not authenticated.' };
+
         const response = await supabase
             .from('assessments')
             .select('id')
+            .eq('user_id', userId)
             .limit(1)
             .maybeSingle();
         if (response.error) {
@@ -134,9 +144,12 @@ export async function insertFeedback(message) {
 
 export async function insertAssessment(data) {
     try {
+        const userId = await getAuthUserId();
+        if (!userId) return { success: false, error: 'User not authenticated.', data: null };
+
         const response = await supabase
             .from('assessments')
-            .insert([data])
+            .insert([{ ...data, user_id: userId }])
             .select()
             .single();
         return handleResponse(response, 'insertAssessment');
@@ -147,9 +160,12 @@ export async function insertAssessment(data) {
 
 export async function insertDailyPlan(data) {
     try {
+        const userId = await getAuthUserId();
+        if (!userId) return { success: false, error: 'User not authenticated.', data: null };
+
         const response = await supabase
             .from('daily_plans')
-            .insert([data])
+            .insert([{ ...data, user_id: userId }])
             .select()
             .single();
         return handleResponse(response, 'insertDailyPlan');
@@ -160,9 +176,12 @@ export async function insertDailyPlan(data) {
 
 export async function insertReflection(data) {
     try {
+        const userId = await getAuthUserId();
+        if (!userId) return { success: false, error: 'User not authenticated.', data: null };
+
         const response = await supabase
             .from('reflections')
-            .insert([data])
+            .insert([{ ...data, user_id: userId }])
             .select()
             .single();
         return handleResponse(response, 'insertReflection');
@@ -173,9 +192,12 @@ export async function insertReflection(data) {
 
 export async function insertReport(data) {
     try {
+        const userId = await getAuthUserId();
+        if (!userId) return { success: false, error: 'User not authenticated.', data: null };
+
         const response = await supabase
             .from('reports')
-            .insert([data])
+            .insert([{ ...data, user_id: userId }])
             .select()
             .single();
         return handleResponse(response, 'insertReport');
@@ -186,10 +208,13 @@ export async function insertReport(data) {
 
 export async function fetchDailyPlan() {
     try {
-        // Fetching the most recent daily plan
+        const userId = await getAuthUserId();
+        if (!userId) return { success: false, error: 'User not authenticated.', data: null };
+
         const response = await supabase
             .from('daily_plans')
             .select('*')
+            .eq('user_id', userId)
             .order('created_at', { ascending: false })
             .limit(1)
             .single();
@@ -201,9 +226,13 @@ export async function fetchDailyPlan() {
 
 export async function fetchReports() {
     try {
+        const userId = await getAuthUserId();
+        if (!userId) return { success: false, error: 'User not authenticated.', data: null };
+
         const response = await supabase
             .from('reports')
             .select('*')
+            .eq('user_id', userId)
             .order('created_at', { ascending: false });
         return handleResponse(response, 'fetchReports');
     } catch (err) {

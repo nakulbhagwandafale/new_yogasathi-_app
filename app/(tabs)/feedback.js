@@ -13,8 +13,10 @@ import {
 } from 'react-native';
 import { ActivityIndicator } from 'react-native';
 import { insertFeedback } from '../../services/supabaseClient';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function Feedback() {
+    const { theme } = useTheme();
     const [message, setMessage] = useState('');
     const [rating, setRating] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
@@ -51,16 +53,16 @@ export default function Feedback() {
 
     if (submitted) {
         return (
-            <View style={styles.successContainer}>
+            <View style={[styles.successContainer, { backgroundColor: theme.background }]}>
                 <View style={styles.successIconWrapper}>
-                    <Ionicons name="checkmark-circle" size={80} color="#4bb543" />
+                    <Ionicons name="checkmark-circle" size={80} color={theme.primaryLight} />
                 </View>
-                <Text style={styles.successTitle}>Thank You! 🎉</Text>
-                <Text style={styles.successSubtitle}>
+                <Text style={[styles.successTitle, { color: theme.text }]}>Thank You! 🎉</Text>
+                <Text style={[styles.successSubtitle, { color: theme.textSecondary }]}>
                     Your feedback has been submitted successfully. We appreciate your input!
                 </Text>
-                <TouchableOpacity style={styles.newFeedbackBtn} onPress={handleNewFeedback}>
-                    <Text style={styles.newFeedbackBtnText}>Submit Another Feedback</Text>
+                <TouchableOpacity style={[styles.newFeedbackBtn, { borderColor: theme.primary }]} onPress={handleNewFeedback}>
+                    <Text style={[styles.newFeedbackBtnText, { color: theme.primary }]}>Submit Another Feedback</Text>
                 </TouchableOpacity>
             </View>
         );
@@ -68,24 +70,24 @@ export default function Feedback() {
 
     return (
         <KeyboardAvoidingView
-            style={styles.screen}
+            style={[styles.screen, { backgroundColor: theme.background }]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
                 {/* Header */}
                 <View style={styles.headerSection}>
-                    <View style={styles.headerIconWrapper}>
-                        <Ionicons name="chatbubble-ellipses" size={36} color="#2e7d32" />
+                    <View style={[styles.headerIconWrapper, { backgroundColor: theme.accent }]}>
+                        <Ionicons name="chatbubble-ellipses" size={36} color={theme.primary} />
                     </View>
-                    <Text style={styles.title}>We Value Your Feedback</Text>
-                    <Text style={styles.subtitle}>
+                    <Text style={[styles.title, { color: theme.text }]}>We Value Your Feedback</Text>
+                    <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
                         Help us improve YogaSathi AI by sharing your experience and suggestions.
                     </Text>
                 </View>
 
                 {/* Star Rating */}
-                <View style={styles.ratingSection}>
-                    <Text style={styles.ratingLabel}>Rate Your Experience</Text>
+                <View style={[styles.ratingSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                    <Text style={[styles.ratingLabel, { color: theme.textSecondary }]}>Rate Your Experience</Text>
                     <View style={styles.starsRow}>
                         {[1, 2, 3, 4, 5].map((star) => (
                             <TouchableOpacity key={star} onPress={() => setRating(star)} style={styles.starBtn}>
@@ -98,7 +100,7 @@ export default function Feedback() {
                         ))}
                     </View>
                     {rating > 0 && (
-                        <Text style={styles.ratingText}>
+                        <Text style={[styles.ratingText, { color: theme.primary }]}>
                             {rating === 1 && 'Poor 😞'}
                             {rating === 2 && 'Fair 😐'}
                             {rating === 3 && 'Good 🙂'}
@@ -110,12 +112,12 @@ export default function Feedback() {
 
                 {/* Feedback Input */}
                 <View style={styles.inputSection}>
-                    <Text style={styles.inputLabel}>Your Feedback</Text>
-                    <View style={styles.textAreaWrapper}>
+                    <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Your Feedback</Text>
+                    <View style={[styles.textAreaWrapper, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
                         <TextInput
-                            style={styles.textArea}
+                            style={[styles.textArea, { color: theme.inputText }]}
                             placeholder="Tell us what you think... What do you love? What can we improve?"
-                            placeholderTextColor="#a0aec0"
+                            placeholderTextColor={theme.placeholder}
                             value={message}
                             onChangeText={setMessage}
                             multiline
@@ -124,12 +126,12 @@ export default function Feedback() {
                             maxLength={1000}
                         />
                     </View>
-                    <Text style={styles.charCount}>{message.length}/1000</Text>
+                    <Text style={[styles.charCount, { color: theme.textMuted }]}>{message.length}/1000</Text>
                 </View>
 
                 {/* Submit Button */}
                 <TouchableOpacity
-                    style={[styles.submitBtn, (!message.trim()) && styles.submitBtnDisabled]}
+                    style={[styles.submitBtn, { backgroundColor: theme.primary }, (!message.trim()) && styles.submitBtnDisabled]}
                     onPress={handleSubmit}
                     disabled={isLoading || !message.trim()}
                 >
@@ -150,12 +152,11 @@ export default function Feedback() {
 const styles = StyleSheet.create({
     screen: {
         flex: 1,
-        backgroundColor: '#fbfdfc',
     },
     container: {
         flexGrow: 1,
         paddingHorizontal: 25,
-        paddingTop: 60,
+        paddingTop: 20,
         paddingBottom: 40,
     },
     // Header
@@ -167,7 +168,6 @@ const styles = StyleSheet.create({
         width: 70,
         height: 70,
         borderRadius: 35,
-        backgroundColor: '#e8f5e9',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 15,
@@ -175,13 +175,11 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#1a202c',
         textAlign: 'center',
         marginBottom: 8,
     },
     subtitle: {
         fontSize: 14,
-        color: '#718096',
         textAlign: 'center',
         lineHeight: 20,
         paddingHorizontal: 10,
@@ -190,16 +188,13 @@ const styles = StyleSheet.create({
     ratingSection: {
         alignItems: 'center',
         marginBottom: 30,
-        backgroundColor: '#fff',
         borderRadius: 14,
         padding: 20,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
     },
     ratingLabel: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#4a5568',
         marginBottom: 15,
     },
     starsRow: {
@@ -213,7 +208,6 @@ const styles = StyleSheet.create({
     ratingText: {
         marginTop: 10,
         fontSize: 14,
-        color: '#2e7d32',
         fontWeight: '500',
     },
     // Feedback Input
@@ -223,32 +217,26 @@ const styles = StyleSheet.create({
     inputLabel: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#4a5568',
         marginBottom: 10,
     },
     textAreaWrapper: {
-        backgroundColor: '#fff',
         borderWidth: 1,
-        borderColor: '#e2e8f0',
         borderRadius: 14,
         padding: 15,
         minHeight: 150,
     },
     textArea: {
         fontSize: 15,
-        color: '#2d3748',
         lineHeight: 22,
     },
     charCount: {
         textAlign: 'right',
         fontSize: 12,
-        color: '#a0aec0',
         marginTop: 6,
     },
     // Submit
     submitBtn: {
         flexDirection: 'row',
-        backgroundColor: '#2e7d32',
         borderRadius: 28,
         height: 55,
         justifyContent: 'center',
@@ -260,7 +248,7 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     submitBtnDisabled: {
-        backgroundColor: '#9ae6b4',
+        opacity: 0.5,
         shadowOpacity: 0,
         elevation: 0,
     },
@@ -277,7 +265,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fbfdfc',
         padding: 30,
     },
     successIconWrapper: {
@@ -286,12 +273,10 @@ const styles = StyleSheet.create({
     successTitle: {
         fontSize: 26,
         fontWeight: 'bold',
-        color: '#1a202c',
         marginBottom: 10,
     },
     successSubtitle: {
         fontSize: 15,
-        color: '#718096',
         textAlign: 'center',
         lineHeight: 22,
         marginBottom: 30,
@@ -299,13 +284,11 @@ const styles = StyleSheet.create({
     },
     newFeedbackBtn: {
         borderWidth: 1,
-        borderColor: '#2e7d32',
         borderRadius: 28,
         paddingVertical: 14,
         paddingHorizontal: 30,
     },
     newFeedbackBtnText: {
-        color: '#2e7d32',
         fontSize: 15,
         fontWeight: '600',
     },

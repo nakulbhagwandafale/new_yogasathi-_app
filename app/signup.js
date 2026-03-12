@@ -138,8 +138,15 @@ export default function SignUp() {
                         {agreedToTerms && <Ionicons name="checkmark" size={16} color="#4bb543" />}
                     </TouchableOpacity>
                     <Text style={styles.checkboxText}>
-                        I agree to the <Text style={styles.linkText}>Terms of Service</Text> and{' '}
-                        <Text style={styles.linkText}>Privacy Policy</Text>
+                        I agree to the{' '}
+                        <Text
+                            style={styles.linkText}
+                            onPress={() => router.push('/terms')}
+                        >Terms & Conditions</Text> and{' '}
+                        <Text
+                            style={styles.linkText}
+                            onPress={() => router.push('/privacy')}
+                        >Privacy Policy</Text>
                     </Text>
                 </View>
 

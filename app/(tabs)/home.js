@@ -6,8 +6,10 @@ import FoodCard from '../../components/FoodCard';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import YogaCard from '../../components/YogaCard';
 import { fetchDailyPlan } from '../../services/supabaseClient';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function HomePage() {
+    const { theme } = useTheme();
     const [dailyPlan, setDailyPlan] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -34,9 +36,9 @@ export default function HomePage() {
 
     if (!dailyPlan) {
         return (
-            <View style={styles.centerContainer}>
-                <Text style={styles.errorText}>No active plan found.</Text>
-                <Button mode="contained" onPress={() => router.replace('/assessment')}>Take Assessment</Button>
+            <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
+                <Text style={[styles.errorText, { color: theme.textSecondary }]}>No active plan found.</Text>
+                <Button mode="contained" onPress={() => router.replace('/assessment')} buttonColor={theme.primary}>Take Assessment</Button>
             </View>
         );
     }
@@ -46,22 +48,22 @@ export default function HomePage() {
     const foodPlan = typeof dailyPlan.food_plan === 'string' ? JSON.parse(dailyPlan.food_plan) : dailyPlan.food_plan;
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <View style={styles.header}>
+        <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
+            <View style={[styles.header, { backgroundColor: theme.primary }]}>
                 <Title style={styles.headerTitle}>☀️ Today&apos;s Plan</Title>
             </View>
 
             <View style={styles.section}>
-                <Title style={styles.sectionTitle}>🧘‍♀️ Your Yoga Routine</Title>
+                <Title style={[styles.sectionTitle, { color: theme.text }]}>🧘‍♀️ Your Yoga Routine</Title>
                 {yogaPlan && yogaPlan.map((yogaItem, index) => (
                     <YogaCard key={`yoga-${index}`} plan={yogaItem} />
                 ))}
             </View>
 
-            <Divider style={styles.mainDivider} />
+            <Divider style={[styles.mainDivider, { backgroundColor: theme.divider }]} />
 
             <View style={styles.section}>
-                <Title style={styles.sectionTitle}>🥗 Nutrition Guide</Title>
+                <Title style={[styles.sectionTitle, { color: theme.text }]}>🥗 Nutrition Guide</Title>
                 {foodPlan && foodPlan.map((foodItem, index) => (
                     <FoodCard key={`food-${index}`} plan={foodItem} />
                 ))}
@@ -73,6 +75,7 @@ export default function HomePage() {
                     onPress={() => router.push('/reflection')}
                     style={styles.reflectionBtn}
                     labelStyle={styles.btnLabel}
+                    buttonColor={theme.primaryLight}
                 >
                     📝 Fill Reflection Form
                 </Button>
@@ -82,15 +85,15 @@ export default function HomePage() {
 }
 
 const styles = StyleSheet.create({
-    container: { flexGrow: 1, backgroundColor: '#fafafa', paddingBottom: 40 },
+    container: { flexGrow: 1, paddingBottom: 40 },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-    errorText: { fontSize: 18, marginBottom: 20, color: '#666' },
-    header: { backgroundColor: '#2e7d32', padding: 25, paddingTop: 60, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
+    errorText: { fontSize: 18, marginBottom: 20 },
+    header: { padding: 25, paddingTop: 20, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
     headerTitle: { color: '#fff', fontSize: 28, fontWeight: 'bold' },
     section: { padding: 20 },
-    sectionTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, color: '#333' },
-    mainDivider: { height: 2, backgroundColor: '#eee', marginHorizontal: 20 },
+    sectionTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+    mainDivider: { height: 2, marginHorizontal: 20 },
     footer: { padding: 20, marginTop: 10 },
-    reflectionBtn: { paddingVertical: 8, backgroundColor: '#4bb543' },
+    reflectionBtn: { paddingVertical: 8 },
     btnLabel: { fontSize: 16, fontWeight: 'bold', color: '#000' },
 });

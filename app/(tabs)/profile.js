@@ -3,8 +3,10 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getCurrentUser, logoutUser } from '../../services/supabaseClient';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function Profile() {
+    const { theme } = useTheme();
     const [userName, setUserName] = useState('User');
 
     useEffect(() => {
@@ -46,73 +48,99 @@ export default function Profile() {
     ];
 
     return (
-        <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Ionicons name="arrow-back" size={24} color="#333" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Profile</Text>
-                <TouchableOpacity>
-                    <Ionicons name="settings-outline" size={24} color="#333" />
-                </TouchableOpacity>
-            </View>
-
+        <ScrollView style={[styles.screen, { backgroundColor: theme.background }]} contentContainerStyle={styles.container}>
             {/* Profile Avatar */}
             <View style={styles.avatarSection}>
                 <View style={styles.avatarContainer}>
-                    <View style={styles.avatar}>
-                        <Ionicons name="person" size={50} color="#a0aec0" />
+                    <View style={[styles.avatar, { backgroundColor: theme.accent, borderColor: theme.primaryLight }]}>
+                        <Ionicons name="person" size={50} color={theme.textMuted} />
                     </View>
-                    <View style={styles.editBadge}>
+                    <View style={[styles.editBadge, { backgroundColor: theme.primaryLight }]}>
                         <Ionicons name="pencil" size={14} color="#fff" />
                     </View>
                 </View>
-                <Text style={styles.userName}>{userName}</Text>
-                <Text style={styles.userRole}>YOGA ENTHUSIAST</Text>
+                <Text style={[styles.userName, { color: theme.text }]}>{userName}</Text>
+                <Text style={[styles.userRole, { color: theme.primaryLight }]}>YOGA ENTHUSIAST</Text>
+            </View>
+
+            {/* Quick Actions (Dashboard, Reflection, Report) */}
+            <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>MY JOURNEY</Text>
+            <View style={styles.quickActionsContainer}>
+                <TouchableOpacity
+                    style={[styles.quickActionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+                    onPress={() => router.push('/(tabs)/dashboard')}
+                    activeOpacity={0.8}
+                >
+                    <View style={[styles.quickActionIconWrap, { backgroundColor: '#e0f2fe' }]}>
+                        <Ionicons name="bar-chart-outline" size={24} color="#0284c7" />
+                    </View>
+                    <Text style={[styles.quickActionTitle, { color: theme.text }]}>Dashboard</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.quickActionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+                    onPress={() => router.push('/reflection')}
+                    activeOpacity={0.8}
+                >
+                    <View style={[styles.quickActionIconWrap, { backgroundColor: '#fef3c7' }]}>
+                        <Ionicons name="journal-outline" size={24} color="#d97706" />
+                    </View>
+                    <Text style={[styles.quickActionTitle, { color: theme.text }]}>Reflection</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.quickActionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+                    onPress={() => router.push('/report')}
+                    activeOpacity={0.8}
+                >
+                    <View style={[styles.quickActionIconWrap, { backgroundColor: '#dcfce7' }]}>
+                        <Ionicons name="document-text-outline" size={24} color="#16a34a" />
+                    </View>
+                    <Text style={[styles.quickActionTitle, { color: theme.text }]}>Report</Text>
+                </TouchableOpacity>
             </View>
 
             {/* Subscription Card */}
-            <View style={styles.subscriptionCard}>
+            <View style={[styles.subscriptionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
                 <View style={styles.subscriptionContent}>
-                    <Text style={styles.subscriptionLabel}>SUBSCRIPTION STATUS</Text>
-                    <Text style={styles.subscriptionPlan}>YogaSathi Premium</Text>
+                    <Text style={[styles.subscriptionLabel, { color: theme.textMuted }]}>SUBSCRIPTION STATUS</Text>
+                    <Text style={[styles.subscriptionPlan, { color: theme.text }]}>YogaSathi Premium</Text>
                     <View style={styles.statusRow}>
-                        <View style={styles.activeDot} />
-                        <Text style={styles.activeText}>Active</Text>
+                        <View style={[styles.activeDot, { backgroundColor: theme.primaryLight }]} />
+                        <Text style={[styles.activeText, { color: theme.primaryLight }]}>Active</Text>
                     </View>
                 </View>
-                <TouchableOpacity style={styles.manageButton}>
+                <TouchableOpacity style={[styles.manageButton, { backgroundColor: theme.primaryLight }]}>
                     <Text style={styles.manageButtonText}>Manage</Text>
                 </TouchableOpacity>
             </View>
 
             {/* Account Settings */}
-            <Text style={styles.sectionTitle}>ACCOUNT SETTINGS</Text>
+            <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>ACCOUNT SETTINGS</Text>
 
             <View style={styles.settingsList}>
                 {settingsOptions.map((item, index) => (
-                    <TouchableOpacity key={index} style={styles.settingsItem}>
+                    <TouchableOpacity key={index} style={[styles.settingsItem, { borderBottomColor: theme.divider }]}>
                         <View style={styles.settingsItemLeft}>
-                            <View style={styles.settingsIconWrapper}>
-                                <Ionicons name={item.icon} size={22} color="#4bb543" />
+                            <View style={[styles.settingsIconWrapper, { backgroundColor: theme.accent }]}>
+                                <Ionicons name={item.icon} size={22} color={theme.primaryLight} />
                             </View>
-                            <Text style={styles.settingsLabel}>{item.label}</Text>
+                            <Text style={[styles.settingsLabel, { color: theme.text }]}>{item.label}</Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={20} color="#ccc" />
+                        <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
                     </TouchableOpacity>
                 ))}
             </View>
 
             {/* Logout */}
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <TouchableOpacity style={[styles.logoutButton, { borderTopColor: theme.divider }]} onPress={handleLogout}>
                 <View style={styles.settingsItemLeft}>
                     <View style={[styles.settingsIconWrapper, styles.logoutIconWrapper]}>
                         <Ionicons name="log-out-outline" size={22} color="#e53e3e" />
                     </View>
                     <Text style={styles.logoutText}>Logout</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#ccc" />
+                <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
             </TouchableOpacity>
         </ScrollView>
     );
@@ -121,24 +149,10 @@ export default function Profile() {
 const styles = StyleSheet.create({
     screen: {
         flex: 1,
-        backgroundColor: '#fbfdfc',
     },
     container: {
         paddingBottom: 40,
-    },
-    // Header
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingTop: 55,
-        paddingBottom: 15,
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#333',
+        paddingTop: 15,
     },
     // Avatar Section
     avatarSection: {
@@ -153,11 +167,9 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: '#e8f5e9',
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 3,
-        borderColor: '#4bb543',
     },
     editBadge: {
         position: 'absolute',
@@ -166,7 +178,6 @@ const styles = StyleSheet.create({
         width: 28,
         height: 28,
         borderRadius: 14,
-        backgroundColor: '#4bb543',
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 2,
@@ -175,14 +186,39 @@ const styles = StyleSheet.create({
     userName: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#1a202c',
         marginBottom: 4,
     },
     userRole: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#4bb543',
         letterSpacing: 1.5,
+    },
+    // Quick Actions
+    quickActionsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginHorizontal: 20,
+        marginBottom: 30,
+    },
+    quickActionCard: {
+        flex: 1,
+        alignItems: 'center',
+        paddingVertical: 18,
+        borderRadius: 14,
+        borderWidth: 1,
+        marginHorizontal: 4,
+    },
+    quickActionIconWrap: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    quickActionTitle: {
+        fontSize: 13,
+        fontWeight: '600',
     },
     // Subscription Card
     subscriptionCard: {
@@ -190,11 +226,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginHorizontal: 20,
-        backgroundColor: '#fff',
         borderRadius: 14,
         padding: 18,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
         marginBottom: 30,
     },
     subscriptionContent: {
@@ -203,14 +237,12 @@ const styles = StyleSheet.create({
     subscriptionLabel: {
         fontSize: 11,
         fontWeight: '700',
-        color: '#a0aec0',
         letterSpacing: 1,
         marginBottom: 5,
     },
     subscriptionPlan: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#1a202c',
         marginBottom: 6,
     },
     statusRow: {
@@ -221,16 +253,13 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: '#4bb543',
         marginRight: 6,
     },
     activeText: {
         fontSize: 13,
-        color: '#4bb543',
         fontWeight: '500',
     },
     manageButton: {
-        backgroundColor: '#4bb543',
         borderRadius: 20,
         paddingHorizontal: 20,
         paddingVertical: 10,
@@ -244,7 +273,6 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 12,
         fontWeight: '700',
-        color: '#a0aec0',
         letterSpacing: 1,
         marginHorizontal: 20,
         marginBottom: 15,
@@ -258,7 +286,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
     },
     settingsItemLeft: {
         flexDirection: 'row',
@@ -268,14 +295,12 @@ const styles = StyleSheet.create({
         width: 38,
         height: 38,
         borderRadius: 19,
-        backgroundColor: '#e6f4ea',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,
     },
     settingsLabel: {
         fontSize: 16,
-        color: '#333',
         fontWeight: '500',
     },
     // Logout
@@ -287,7 +312,6 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         marginTop: 10,
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
     },
     logoutIconWrapper: {
         backgroundColor: '#fed7d7',
