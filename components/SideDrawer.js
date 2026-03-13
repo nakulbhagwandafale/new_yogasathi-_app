@@ -17,6 +17,7 @@ import { logoutUser } from '../services/supabaseClient';
 const DRAWER_WIDTH = Dimensions.get('window').width * 0.75;
 const navItems = [
     { icon: 'home-outline', label: 'Home', route: '/(tabs)/home' },
+    { icon: 'videocam-outline', label: 'Yoga Videos', route: '/yoga-videos' },
     { icon: 'person-outline', label: 'Profile', route: '/(tabs)/profile' },
     { icon: 'chatbubble-ellipses-outline', label: 'Feedback', route: '/(tabs)/feedback' },
     { icon: 'bulb-outline', label: 'How It Works', route: '/how-it-works' },
