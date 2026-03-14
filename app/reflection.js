@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, SegmentedButtons, Text, Title } from 'react-native-paper';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { generateDailyReport, generateReflectionQuestions } from '../services/geminiService';
-import { fetchDailyPlan, insertReflection, insertReport } from '../services/supabaseClient';
+import { generateDailyReport, generateNextDayPlan, generateReflectionQuestions } from '../services/geminiService';
+import { fetchDailyPlan, fetchLatestAssessment, insertDailyPlan, insertReflection, insertReport } from '../services/supabaseClient';
 import { canSubmitReflection } from '../utils/dateUtils';
 
 export default function Reflection() {
@@ -122,6 +122,25 @@ export default function Reflection() {
             if (!reportSaveResult.success) {
                 throw new Error('Could not save your daily report.');
             }
+
+            // --- Auto-generate next day's plan ---
+            const assessmentResult = await fetchLatestAssessment();
+            if (assessmentResult.success && assessmentResult.data) {
+                const nextDayResult = await generateNextDayPlan(
+                    assessmentResult.data,
+                    activeYogaPlan,
+                    activeFoodPlan,
+                    generatedReport
+                );
+
+                if (nextDayResult.success && nextDayResult.data) {
+                    await insertDailyPlan({
+                        yoga_plan: nextDayResult.data.yoga_plan,
+                        food_plan: nextDayResult.data.food_plan
+                    });
+                }
+            }
+            // --------------------------------------
 
             // Route to Report UI
             setIsLoading(false);

@@ -115,3 +115,38 @@ export async function generateDailyReport(reflectionAnswers, yogaPlan, foodPlan)
         return { success: false, error: err.message, data: null };
     }
 }
+
+export async function generateNextDayPlan(assessmentData, previousYogaPlan, previousFoodPlan, latestReport) {
+    const prompt = `
+    You are an expert AI Health Coach (Yoga & Nutrition). Based on the user's profile, what they practiced today, and their performance report, create a NEW personalized Yoga and Food plan for TOMORROW. Adjust difficulty and variety based on their strengths and weaknesses.
+
+    User Profile (from initial assessment):
+    - Age: ${assessmentData.age || 'Unknown'}
+    - Goal: ${assessmentData.health_goal || 'General Fitness'}
+    - Fitness Level: ${assessmentData.fitness_level || 'Beginner'}
+    - Yoga Experience: ${assessmentData.yoga_experience || 'Beginner'}
+    - Diet Preference: ${assessmentData.diet_preference || 'Balanced'}
+
+    Today's Performance Report:
+    - Score: ${latestReport.score}/100
+    - Summary: ${latestReport.summary}
+    - Strengths: ${JSON.stringify(latestReport.strengths || [])}
+    - Weaknesses: ${JSON.stringify(latestReport.weaknesses || [])}
+    - Suggestions: ${JSON.stringify(latestReport.suggestions || [])}
+
+    Today's Yoga Plan (for reference): ${JSON.stringify(previousYogaPlan)}
+    Today's Food Plan (for reference): ${JSON.stringify(previousFoodPlan)}
+
+    Return a combined JSON object for tomorrow. The response MUST strictly match this exact JSON format:
+    {
+      "yoga_plan": [ { "name": "Pose Name", "duration": "5 minutes", "description": "How to do it" } ],
+      "food_plan": [ { "meal": "Breakfast", "food": "Oatmeal", "calories": "300 kcal", "description": "Healthy oats" } ]
+    }
+  `;
+    try {
+        const data = await callGemini(prompt);
+        return { success: true, data: data };
+    } catch (err) {
+        return { success: false, error: err.message, data: null };
+    }
+}

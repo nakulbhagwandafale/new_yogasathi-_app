@@ -90,13 +90,13 @@ export default function Profile() {
 
                 <TouchableOpacity
                     style={[styles.quickActionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-                    onPress={() => router.push('/report')}
+                    onPress={() => router.push('/all-reports')}
                     activeOpacity={0.8}
                 >
                     <View style={[styles.quickActionIconWrap, { backgroundColor: '#dcfce7' }]}>
                         <Ionicons name="document-text-outline" size={24} color="#16a34a" />
                     </View>
-                    <Text style={[styles.quickActionTitle, { color: theme.text }]}>Report</Text>
+                    <Text style={[styles.quickActionTitle, { color: theme.text }]}>Reports</Text>
                 </TouchableOpacity>
             </View>
 

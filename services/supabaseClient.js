@@ -95,6 +95,26 @@ export async function checkAssessmentExists() {
         return { success: false, exists: false, error: err.message };
     }
 }
+
+export async function fetchLatestAssessment() {
+    try {
+        const userId = await getAuthUserId();
+        if (!userId) return { success: false, error: 'User not authenticated.', data: null };
+
+        const response = await supabase
+            .from('assessments')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        return handleResponse(response, 'fetchLatestAssessment');
+    } catch (err) {
+        return { success: false, error: err.message, data: null };
+    }
+}
+
 export async function logoutUser() {
     try {
         const { error } = await supabase.auth.signOut();
