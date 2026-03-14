@@ -5,13 +5,12 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 
-const CHIPS = ['All Topics', 'Account', 'Practices', 'Billing'];
+const CHIPS = ['All Topics', 'Billing'];
 
 const FAQ_DATA = [
     {
@@ -47,7 +46,7 @@ const FAQ_DATA = [
             {
                 id: 'q5',
                 question: 'Do you offer a free trial?',
-                answer: 'Yes, we offer a 7-day free trial for all new users to explore the premium features of YogaSathi.',
+                answer: 'Yes, we offer a first three days free trial for all new users to explore the premium features of YogaSathi.',
             },
         ],
     },
@@ -55,12 +54,11 @@ const FAQ_DATA = [
 
 export default function FAQs() {
     const { theme } = useTheme();
-    const [searchQuery, setSearchQuery] = useState('');
     const [activeChip, setActiveChip] = useState('All Topics');
     const [expandedIds, setExpandedIds] = useState(['q1']); // default expand the first one
 
     const toggleAccordion = (id) => {
-        setExpandedIds(prev => 
+        setExpandedIds(prev =>
             prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
         );
     };
@@ -79,7 +77,7 @@ export default function FAQs() {
             </View>
 
             <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-                
+
                 {/* Header */}
                 <View style={styles.headerBlock}>
                     <Text style={[styles.headerTitle, { color: theme.text }]}>How can we help?</Text>
@@ -88,22 +86,11 @@ export default function FAQs() {
                     </Text>
                 </View>
 
-                {/* Search Bar */}
-                <View style={[styles.searchContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                    <Ionicons name="search-outline" size={20} color={theme.primaryLight} style={styles.searchIcon} />
-                    <TextInput
-                        style={[styles.searchInput, { color: theme.text }]}
-                        placeholder="Search topics, keywords..."
-                        placeholderTextColor={theme.textMuted}
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                    />
-                </View>
 
                 {/* Filter Chips */}
-                <ScrollView 
-                    horizontal 
-                    showsHorizontalScrollIndicator={false} 
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.chipsRow}
                 >
                     {CHIPS.map(chip => {
@@ -130,12 +117,11 @@ export default function FAQs() {
 
                 {/* FAQ Sections */}
                 {FAQ_DATA.map((section, sIndex) => {
-                    // Filter based on active chip if needed (just visual for now, showing all if 'All Topics')
-                    if (activeChip !== 'All Topics' && !activeChip.includes(section.category.split(' ')[0])) {
-                         if (activeChip !== 'Billing' || !section.category.includes('Billing')) {
-                             // basic filtering simulation
-                             return null; 
-                         }
+                    // Filter based on active chip
+                    if (activeChip !== 'All Topics') {
+                        if (activeChip === 'Billing' && !section.category.includes('Billing')) {
+                            return null;
+                        }
                     }
 
                     return (
@@ -150,29 +136,29 @@ export default function FAQs() {
                             {section.items.map((item) => {
                                 const isExpanded = expandedIds.includes(item.id);
                                 return (
-                                    <View 
-                                        key={item.id} 
+                                    <View
+                                        key={item.id}
                                         style={[
-                                            styles.accordionCard, 
+                                            styles.accordionCard,
                                             { backgroundColor: theme.card, borderColor: theme.border },
                                             isExpanded && styles.accordionExpanded
                                         ]}
                                     >
-                                        <TouchableOpacity 
-                                            style={styles.accordionTouch} 
+                                        <TouchableOpacity
+                                            style={styles.accordionTouch}
                                             onPress={() => toggleAccordion(item.id)}
                                             activeOpacity={0.7}
                                         >
                                             <Text style={[styles.questionText, { color: theme.text, fontWeight: isExpanded ? '700' : '600' }]}>
                                                 {item.question}
                                             </Text>
-                                            <Ionicons 
-                                                name={isExpanded ? 'chevron-up' : 'chevron-down'} 
-                                                size={20} 
-                                                color={theme.primaryLight} 
+                                            <Ionicons
+                                                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                                                size={20}
+                                                color={theme.primaryLight}
                                             />
                                         </TouchableOpacity>
-                                        
+
                                         {isExpanded && (
                                             <View style={styles.answerContainer}>
                                                 <Text style={[styles.answerText, { color: theme.textSecondary }]}>
@@ -197,7 +183,7 @@ export default function FAQs() {
                         Our team of wellness coaches is here to support you 24/7.
                     </Text>
 
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={[styles.primaryBtn, { backgroundColor: theme.primaryLight }]}
                         onPress={() => router.push('/contact')}
                     >
@@ -205,7 +191,7 @@ export default function FAQs() {
                         <Text style={styles.primaryBtnText}>Email Support</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={[styles.secondaryBtn, { backgroundColor: theme.card, borderColor: theme.border }]}
                         onPress={() => router.push('/contact')}
                     >
@@ -221,7 +207,7 @@ export default function FAQs() {
 
 const styles = StyleSheet.create({
     screen: { flex: 1 },
-    
+
     // Top bar matching generic style but with background
     topBar: {
         flexDirection: 'row',
@@ -249,18 +235,6 @@ const styles = StyleSheet.create({
     headerTitle: { fontSize: 26, fontWeight: '800', marginBottom: 8 },
     headerSubtitle: { fontSize: 14, textAlign: 'center', lineHeight: 20, paddingHorizontal: 10 },
 
-    // Search
-    searchContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        height: 52,
-        borderRadius: 26,
-        paddingHorizontal: 16,
-        borderWidth: 1,
-        marginBottom: 20,
-    },
-    searchIcon: { marginRight: 10 },
-    searchInput: { flex: 1, fontSize: 15 },
 
     // Chips
     chipsRow: {
@@ -324,7 +298,7 @@ const styles = StyleSheet.create({
     },
     ctaTitle: { fontSize: 18, fontWeight: '700', marginBottom: 8 },
     ctaDesc: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: 20 },
-    
+
     primaryBtn: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -335,7 +309,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     primaryBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-    
+
     secondaryBtn: {
         flexDirection: 'row',
         alignItems: 'center',
