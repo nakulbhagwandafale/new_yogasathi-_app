@@ -5,14 +5,16 @@ import { Button, Divider, Title } from 'react-native-paper';
 import FoodCard from '../../components/FoodCard';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import YogaCard from '../../components/YogaCard';
-import { fetchDailyPlan } from '../../services/supabaseClient';
+import { fetchDailyPlan, fetchSubscription } from '../../services/supabaseClient';
 import { useTheme } from '../../context/ThemeContext';
 import { canSubmitReflection } from '../../utils/dateUtils';
+import { isTrialExpired } from '../../utils/subscriptionUtils';
 
 export default function HomePage() {
     const { theme } = useTheme();
     const [dailyPlan, setDailyPlan] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isExpired, setIsExpired] = useState(false);
 
     useEffect(() => {
         loadHomeData();
@@ -20,6 +22,20 @@ export default function HomePage() {
 
     const loadHomeData = async () => {
         setIsLoading(true);
+
+        // Check subscription first
+        const subResult = await fetchSubscription();
+        const expired = subResult.success && isTrialExpired(subResult.data);
+        setIsExpired(expired);
+
+        if (expired) {
+            Alert.alert(
+                'Trial Expired',
+                'Your free trial has ended. Please choose a paid plan to continue using YogaSathi.',
+                [{ text: 'View Plans', onPress: () => router.push('/pricing') }]
+            );
+        }
+
         const result = await fetchDailyPlan();
 
         if (!result.success) {
@@ -74,15 +90,15 @@ export default function HomePage() {
             <View style={styles.footer}>
                 <Button
                     mode="contained"
-                    onPress={() => router.push('/reflection')}
-                    style={[styles.reflectionBtn, !isReflectionTime && styles.disabledBtn]}
-                    labelStyle={[styles.btnLabel, !isReflectionTime && { color: '#999' }]}
-                    buttonColor={isReflectionTime ? theme.primaryLight : '#e0e0e0'}
-                    disabled={!isReflectionTime}
+                    onPress={() => isExpired ? router.push('/pricing') : router.push('/reflection')}
+                    style={[styles.reflectionBtn, (!isReflectionTime || isExpired) && styles.disabledBtn]}
+                    labelStyle={[styles.btnLabel, (!isReflectionTime || isExpired) && { color: '#999' }]}
+                    buttonColor={(isReflectionTime && !isExpired) ? theme.primaryLight : '#e0e0e0'}
+                    disabled={(!isReflectionTime && !isExpired)}
                 >
-                    📝 Fill Reflection Form
+                    {isExpired ? '🔒 Upgrade to Reflect' : '📝 Fill Reflection Form'}
                 </Button>
-                {!isReflectionTime && (
+                {(!isReflectionTime && !isExpired) && (
                     <Text style={[styles.disabledHint, { color: theme.textMuted }]}>
                         Available after 10:00 PM tonight
                     </Text>

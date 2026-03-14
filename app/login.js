@@ -13,7 +13,8 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { checkAssessmentExists, loginUser } from '../services/supabaseClient';
+import { checkAssessmentExists, loginUser, fetchSubscription } from '../services/supabaseClient';
+import { isTrialExpired } from '../utils/subscriptionUtils';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -44,8 +45,13 @@ export default function Login() {
             setIsLoading(false);
 
             if (assessmentResult.exists) {
-                // Returning user — go to dashboard
-                router.replace('/(tabs)/home');
+                // Check subscription status
+                const subResult = await fetchSubscription();
+                if (subResult.success && isTrialExpired(subResult.data)) {
+                    router.replace('/pricing');
+                } else {
+                    router.replace('/(tabs)/home');
+                }
             } else {
                 // First-time user — go to assessment
                 router.replace('/assessment');

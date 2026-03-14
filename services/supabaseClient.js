@@ -301,3 +301,98 @@ export async function fetchReports() {
         return { success: false, error: err.message, data: null };
     }
 }
+
+// --- Subscription Operations ---
+
+export async function createFreeTrialSubscription() {
+    try {
+        const userId = await getAuthUserId();
+        if (!userId) return { success: false, error: 'User not authenticated.', data: null };
+
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days from now
+
+        const response = await supabase
+            .from('subscriptions')
+            .insert([{
+                user_id: userId,
+                plan: 'free_trial',
+                started_at: now.toISOString(),
+                expires_at: expiresAt.toISOString(),
+                is_active: true,
+            }])
+            .select()
+            .single();
+        return handleResponse(response, 'createFreeTrialSubscription');
+    } catch (err) {
+        return { success: false, error: err.message, data: null };
+    }
+}
+
+export async function fetchSubscription() {
+    try {
+        const userId = await getAuthUserId();
+        if (!userId) return { success: false, error: 'User not authenticated.', data: null };
+
+        const response = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        return handleResponse(response, 'fetchSubscription');
+    } catch (err) {
+        return { success: false, error: err.message, data: null };
+    }
+}
+
+export async function activatePaidPlan(planName) {
+    try {
+        const userId = await getAuthUserId();
+        if (!userId) return { success: false, error: 'User not authenticated.', data: null };
+
+        // Check if a subscription row already exists
+        const existing = await supabase
+            .from('subscriptions')
+            .select('id')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (existing.data) {
+            // Update existing subscription
+            const response = await supabase
+                .from('subscriptions')
+                .update({
+                    plan: planName,
+                    started_at: new Date().toISOString(),
+                    expires_at: null, // paid plans don't expire
+                    is_active: true,
+                })
+                .eq('id', existing.data.id)
+                .eq('user_id', userId)
+                .select()
+                .single();
+            return handleResponse(response, 'activatePaidPlan');
+        } else {
+            // Insert new subscription
+            const response = await supabase
+                .from('subscriptions')
+                .insert([{
+                    user_id: userId,
+                    plan: planName,
+                    started_at: new Date().toISOString(),
+                    expires_at: null,
+                    is_active: true,
+                }])
+                .select()
+                .single();
+            return handleResponse(response, 'activatePaidPlan');
+        }
+    } catch (err) {
+        return { success: false, error: err.message, data: null };
+    }
+}
+

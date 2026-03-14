@@ -4,8 +4,9 @@ import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, SegmentedButtons, Text, Title } from 'react-native-paper';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { generateDailyReport, generateNextDayPlan, generateReflectionQuestions } from '../services/geminiService';
-import { fetchDailyPlan, fetchLatestAssessment, insertDailyPlan, insertReflection, insertReport } from '../services/supabaseClient';
+import { fetchDailyPlan, fetchLatestAssessment, insertDailyPlan, insertReflection, insertReport, fetchSubscription } from '../services/supabaseClient';
 import { canSubmitReflection } from '../utils/dateUtils';
+import { isTrialExpired } from '../utils/subscriptionUtils';
 
 export default function Reflection() {
     const [questions, setQuestions] = useState([]);
@@ -24,6 +25,18 @@ export default function Reflection() {
     const loadReflectionForm = async () => {
         try {
             setIsLoading(true);
+
+            // Check subscription
+            const subResult = await fetchSubscription();
+            if (subResult.success && isTrialExpired(subResult.data)) {
+                setIsValidTime(false); // we reuse this state to block the UI
+                Alert.alert(
+                    'Trial Expired',
+                    'Your free trial has ended. Please choose a paid plan to submit reflections and generate new plans.',
+                    [{ text: 'View Plans', onPress: () => router.replace('/pricing') }]
+                );
+                return;
+            }
 
             // Fetch today's plan
             const planResult = await fetchDailyPlan();

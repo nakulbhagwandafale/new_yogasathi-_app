@@ -3,7 +3,8 @@ import { router } from 'expo-router';
 import { useEffect, useState, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { checkAssessmentExists, getSession } from '../services/supabaseClient';
+import { checkAssessmentExists, getSession, fetchSubscription } from '../services/supabaseClient';
+import { isTrialExpired } from '../utils/subscriptionUtils';
 
 export default function Index() {
     const [progressText, setProgressText] = useState(0);
@@ -42,7 +43,13 @@ export default function Index() {
 
                 const assessmentResult = await checkAssessmentExists();
                 if (assessmentResult.exists) {
-                    setDestination('/(tabs)/home');
+                    // Check subscription status before going home
+                    const subResult = await fetchSubscription();
+                    if (subResult.success && isTrialExpired(subResult.data)) {
+                        setDestination('/pricing');
+                    } else {
+                        setDestination('/(tabs)/home');
+                    }
                 } else {
                     setDestination('/assessment');
                 }

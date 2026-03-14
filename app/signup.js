@@ -13,7 +13,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { signUpUser } from '../services/supabaseClient';
+import { signUpUser, createFreeTrialSubscription } from '../services/supabaseClient';
 
 export default function SignUp() {
     const [fullName, setFullName] = useState('');
@@ -38,11 +38,13 @@ export default function SignUp() {
 
         const { success, error } = await signUpUser(email, password, fullName);
 
-        setIsLoading(false);
-
         if (success) {
+            // Create free trial subscription for the new user
+            await createFreeTrialSubscription();
+            setIsLoading(false);
             router.replace('/assessment');
         } else {
+            setIsLoading(false);
             Alert.alert('Sign Up Failed', error);
         }
     };

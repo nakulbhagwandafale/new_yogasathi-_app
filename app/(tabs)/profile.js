@@ -2,12 +2,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { getCurrentUser, logoutUser } from '../../services/supabaseClient';
+import { getCurrentUser, logoutUser, fetchSubscription } from '../../services/supabaseClient';
 import { useTheme } from '../../context/ThemeContext';
+import { getSubscriptionStatus, getTrialDaysRemaining } from '../../utils/subscriptionUtils';
 
 export default function Profile() {
     const { theme } = useTheme();
     const [userName, setUserName] = useState('User');
+    const [subStatus, setSubStatus] = useState('none');
+    const [subPlanName, setSubPlanName] = useState('Loading...');
+    const [trialDays, setTrialDays] = useState(0);
 
     useEffect(() => {
         loadUserData();
@@ -18,6 +22,23 @@ export default function Profile() {
         if (result.success && result.data) {
             const name = result.data.user_metadata?.full_name || result.data.email || 'User';
             setUserName(name);
+        }
+
+        const subResult = await fetchSubscription();
+        if (subResult.success && subResult.data) {
+            const sub = subResult.data;
+            setSubStatus(getSubscriptionStatus(sub));
+            setSubPlanName(
+                sub.plan === 'free_trial' ? 'Free Trial' :
+                sub.plan === 'monthly' ? 'Monthly Premium' :
+                sub.plan === 'yearly' ? 'Yearly Premium' : 'Unknown Plan'
+            );
+            if (sub.plan === 'free_trial') {
+                setTrialDays(getTrialDaysRemaining(sub));
+            }
+        } else {
+            setSubPlanName('Free Plan');
+            setSubStatus('expired');
         }
     };
 
@@ -40,6 +61,7 @@ export default function Profile() {
     };
 
     const settingsOptions = [
+        { icon: 'star-outline', label: 'Subscription Plans', route: '/pricing' },
         { icon: 'settings-outline', label: 'App Settings', route: '/settings' },
         { icon: 'help-circle-outline', label: 'Help & Support', route: '/help' },
     ];
@@ -101,14 +123,16 @@ export default function Profile() {
             <View style={[styles.subscriptionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
                 <View style={styles.subscriptionContent}>
                     <Text style={[styles.subscriptionLabel, { color: theme.textMuted }]}>SUBSCRIPTION STATUS</Text>
-                    <Text style={[styles.subscriptionPlan, { color: theme.text }]}>YogaSathi Premium</Text>
+                    <Text style={[styles.subscriptionPlan, { color: theme.text }]}>{subPlanName}</Text>
                     <View style={styles.statusRow}>
-                        <View style={[styles.activeDot, { backgroundColor: theme.primaryLight }]} />
-                        <Text style={[styles.activeText, { color: theme.primaryLight }]}>Active</Text>
+                        <View style={[styles.activeDot, { backgroundColor: subStatus === 'active' || subStatus === 'trial' ? theme.primaryLight : '#e53e3e' }]} />
+                        <Text style={[styles.activeText, { color: subStatus === 'active' || subStatus === 'trial' ? theme.primaryLight : '#e53e3e' }]}>
+                            {subStatus === 'trial' ? `${trialDays} Days Left` : subStatus === 'active' ? 'Active' : 'Expired'}
+                        </Text>
                     </View>
                 </View>
-                <TouchableOpacity style={[styles.manageButton, { backgroundColor: theme.primaryLight }]}>
-                    <Text style={styles.manageButtonText}>Manage</Text>
+                <TouchableOpacity style={[styles.manageButton, { backgroundColor: theme.primaryLight }]} onPress={() => router.push('/pricing')}>
+                    <Text style={styles.manageButtonText}>{subStatus === 'expired' ? 'Upgrade' : 'Manage'}</Text>
                 </TouchableOpacity>
             </View>
 
