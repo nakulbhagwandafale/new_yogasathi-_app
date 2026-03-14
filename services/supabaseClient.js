@@ -181,6 +181,29 @@ export async function insertFeedback(message) {
     }
 }
 
+export async function insertContactMessage({ full_name, email, category, message }) {
+    try {
+        const userId = await getAuthUserId();
+        if (!userId) return { success: false, error: 'User not authenticated.', data: null };
+
+        const response = await supabase
+            .from('contact_messages')
+            .insert([{
+                user_id: userId,
+                full_name,
+                email,
+                category,
+                message,
+            }])
+            .select()
+            .single();
+
+        return handleResponse(response, 'insertContactMessage');
+    } catch (err) {
+        return { success: false, error: err.message, data: null };
+    }
+}
+
 export async function insertAssessment(data) {
     try {
         const userId = await getAuthUserId();

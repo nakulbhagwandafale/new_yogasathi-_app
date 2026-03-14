@@ -14,6 +14,7 @@ import {
     View,
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { insertContactMessage } from '../services/supabaseClient';
 
 const CATEGORIES = ['General Inquiry', 'Technical Support', 'Billing', 'Feedback', 'Other'];
 
@@ -33,12 +34,33 @@ export default function ContactUs() {
             return;
         }
         setIsSending(true);
-        // Simulate a send delay
-        await new Promise(res => setTimeout(res, 1200));
-        setIsSending(false);
-        Alert.alert('Message Sent \u2705', "We'll get back to you within 24 hours!", [
-            { text: 'OK', onPress: () => router.back() }
-        ]);
+        try {
+            const result = await insertContactMessage({
+                full_name: fullName.trim(),
+                email: email.trim(),
+                category,
+                message: message.trim(),
+            });
+
+            if (!result.success) {
+                Alert.alert('Error', result.error || 'Failed to send message. Please try again.');
+                return;
+            }
+
+            // Clear form fields
+            setFullName('');
+            setEmail('');
+            setCategory('General Inquiry');
+            setMessage('');
+
+            Alert.alert('Message Sent \u2705', "We'll get back to you within 24 hours!", [
+                { text: 'OK', onPress: () => router.back() }
+            ]);
+        } catch (err) {
+            Alert.alert('Error', 'Something went wrong. Please try again later.');
+        } finally {
+            setIsSending(false);
+        }
     };
 
     return (
