@@ -18,14 +18,6 @@ export default function Reflection() {
     const [isValidTime, setIsValidTime] = useState(true);
 
     useEffect(() => {
-        // 1. Check time constraint
-        if (!canSubmitReflection()) {
-            setIsValidTime(false);
-            setIsLoading(false);
-            return;
-        }
-
-        // 2. Load questions
         loadReflectionForm();
     }, []);
 
@@ -37,6 +29,13 @@ export default function Reflection() {
             const planResult = await fetchDailyPlan();
             if (!planResult.success || !planResult.data) {
                 throw new Error('No active daily plan found to reflect upon.');
+            }
+
+            // Check time constraint using the plan's creation date
+            if (!canSubmitReflection(planResult.data.created_at)) {
+                setIsValidTime(false);
+                setIsLoading(false);
+                return;
             }
 
             setActivePlanId(planResult.data.id);
@@ -161,7 +160,7 @@ export default function Reflection() {
             <View style={styles.centerContainer}>
                 <Title style={styles.header}>Not Time Yet ⌛</Title>
                 <Text style={styles.errorText}>
-                    You can only fill out the reflection form after 10:00 AM local time. Check back later tonight!
+                    You can only fill out the reflection form after 10:00 PM local time. Check back later tonight!
                 </Text>
                 <Button mode="contained" onPress={() => router.back()}>Go Back</Button>
             </View>

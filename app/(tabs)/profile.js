@@ -41,7 +41,7 @@ export default function Profile() {
 
     const settingsOptions = [
         { icon: 'settings-outline', label: 'App Settings', route: '/settings' },
-        { icon: 'help-circle-outline', label: 'Help & Support' },
+        { icon: 'help-circle-outline', label: 'Help & Support', route: '/help' },
     ];
 
     return (

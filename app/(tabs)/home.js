@@ -7,6 +7,7 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import YogaCard from '../../components/YogaCard';
 import { fetchDailyPlan } from '../../services/supabaseClient';
 import { useTheme } from '../../context/ThemeContext';
+import { canSubmitReflection } from '../../utils/dateUtils';
 
 export default function HomePage() {
     const { theme } = useTheme();
@@ -46,6 +47,7 @@ export default function HomePage() {
     // Handle parsing stringified JSON vs raw JSONB correctly based on Supabase return type
     const yogaPlan = typeof dailyPlan.yoga_plan === 'string' ? JSON.parse(dailyPlan.yoga_plan) : dailyPlan.yoga_plan;
     const foodPlan = typeof dailyPlan.food_plan === 'string' ? JSON.parse(dailyPlan.food_plan) : dailyPlan.food_plan;
+    const isReflectionTime = canSubmitReflection(dailyPlan.created_at);
 
     return (
         <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
@@ -73,12 +75,18 @@ export default function HomePage() {
                 <Button
                     mode="contained"
                     onPress={() => router.push('/reflection')}
-                    style={styles.reflectionBtn}
-                    labelStyle={styles.btnLabel}
-                    buttonColor={theme.primaryLight}
+                    style={[styles.reflectionBtn, !isReflectionTime && styles.disabledBtn]}
+                    labelStyle={[styles.btnLabel, !isReflectionTime && { color: '#999' }]}
+                    buttonColor={isReflectionTime ? theme.primaryLight : '#e0e0e0'}
+                    disabled={!isReflectionTime}
                 >
                     📝 Fill Reflection Form
                 </Button>
+                {!isReflectionTime && (
+                    <Text style={[styles.disabledHint, { color: theme.textMuted }]}>
+                        Available after 10:00 PM tonight
+                    </Text>
+                )}
             </View>
         </ScrollView>
     );
@@ -95,5 +103,7 @@ const styles = StyleSheet.create({
     mainDivider: { height: 2, marginHorizontal: 20 },
     footer: { padding: 20, marginTop: 10 },
     reflectionBtn: { paddingVertical: 8 },
+    disabledBtn: { opacity: 0.6 },
     btnLabel: { fontSize: 16, fontWeight: 'bold', color: '#000' },
+    disabledHint: { textAlign: 'center', marginTop: 10, fontSize: 13, fontStyle: 'italic' },
 });
