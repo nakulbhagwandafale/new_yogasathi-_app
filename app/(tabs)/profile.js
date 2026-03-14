@@ -43,7 +43,7 @@ export default function Profile() {
         { icon: 'person-outline', label: 'Personal Info' },
         { icon: 'heart-outline', label: 'My Wellness Goals' },
         { icon: 'notifications-outline', label: 'Notifications' },
-        { icon: 'settings-outline', label: 'App Settings' },
+        { icon: 'settings-outline', label: 'App Settings', route: '/settings' },
         { icon: 'help-circle-outline', label: 'Help & Support' },
     ];
 
@@ -120,7 +120,11 @@ export default function Profile() {
 
             <View style={styles.settingsList}>
                 {settingsOptions.map((item, index) => (
-                    <TouchableOpacity key={index} style={[styles.settingsItem, { borderBottomColor: theme.divider }]}>
+                    <TouchableOpacity 
+                        key={index} 
+                        style={[styles.settingsItem, { borderBottomColor: theme.divider }]}
+                        onPress={() => item.route ? router.push(item.route) : null}
+                    >
                         <View style={styles.settingsItemLeft}>
                             <View style={[styles.settingsIconWrapper, { backgroundColor: theme.accent }]}>
                                 <Ionicons name={item.icon} size={22} color={theme.primaryLight} />

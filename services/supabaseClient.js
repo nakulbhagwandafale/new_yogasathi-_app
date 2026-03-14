@@ -115,6 +115,25 @@ export async function fetchLatestAssessment() {
     }
 }
 
+export async function updateAssessment(assessmentId, data) {
+    try {
+        const userId = await getAuthUserId();
+        if (!userId) return { success: false, error: 'User not authenticated.' };
+
+        const response = await supabase
+            .from('assessments')
+            .update(data)
+            .eq('id', assessmentId)
+            .eq('user_id', userId)
+            .select()
+            .single();
+
+        return handleResponse(response, 'updateAssessment');
+    } catch (err) {
+        return { success: false, error: err.message, data: null };
+    }
+}
+
 export async function logoutUser() {
     try {
         const { error } = await supabase.auth.signOut();
