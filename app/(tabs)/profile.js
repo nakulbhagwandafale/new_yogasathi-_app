@@ -40,9 +40,6 @@ export default function Profile() {
     };
 
     const settingsOptions = [
-        { icon: 'person-outline', label: 'Personal Info' },
-        { icon: 'heart-outline', label: 'My Wellness Goals' },
-        { icon: 'notifications-outline', label: 'Notifications' },
         { icon: 'settings-outline', label: 'App Settings', route: '/settings' },
         { icon: 'help-circle-outline', label: 'Help & Support' },
     ];
