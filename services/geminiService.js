@@ -150,3 +150,62 @@ export async function generateNextDayPlan(assessmentData, previousYogaPlan, prev
         return { success: false, error: err.message, data: null };
     }
 }
+
+export async function analyzeYogaPosture(poseName, base64ImagesArray) {
+    if (!process.env.EXPO_PUBLIC_GEMINI_API_KEY) {
+        return { success: false, error: 'Gemini API Key is missing.', data: null };
+    }
+
+    try {
+        const parts = [
+            {
+                text: `
+                You are an expert, observant Yoga instructor and computer vision AI.
+                The user has requested to practice the yoga pose: "${poseName}".
+                I am attaching a chronological sequence of photos taken every 5 seconds over a 1-minute session showing the user attempting this pose.
+                
+                Please evaluate their posture across these frames. 
+                Return a JSON object evaluating their form. 
+                The response MUST strictly match this exact JSON format:
+                {
+                    "is_correct": boolean,
+                    "message": "You are performing this yoga correctly." OR "You are performing this yoga incorrectly and need improvement.",
+                    "instructions": ["Step 1 on how to do it right", "Step 2..."],
+                    "mistakes": ["Mistake 1 observed in photos", "Mistake 2..."] // if is_correct is true, this can be an empty array
+                }
+                `
+            }
+        ];
+
+        // Append all images
+        base64ImagesArray.forEach((base64String) => {
+            parts.push({
+                inlineData: {
+                    mimeType: 'image/jpeg',
+                    data: base64String
+                }
+            });
+        });
+
+        const response = await axios.post(
+            `${GEMINI_URL}?key=${process.env.EXPO_PUBLIC_GEMINI_API_KEY}`,
+            {
+                contents: [{ parts: parts }],
+                generationConfig: {
+                    responseMimeType: 'application/json',
+                },
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        const generatedText = response.data.candidates[0].content.parts[0].text;
+        return { success: true, data: JSON.parse(generatedText) };
+    } catch (error) {
+        console.error('AI Analysis Error:', error.response?.data || error.message);
+        return { success: false, error: error.response?.data?.error?.message || 'Failed to analyze posture', data: null };
+    }
+}
