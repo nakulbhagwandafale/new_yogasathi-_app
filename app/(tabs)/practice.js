@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function PracticeScreen() {
@@ -19,8 +19,15 @@ export default function PracticeScreen() {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background }]}>
-            <View style={styles.content}>
+        <KeyboardAvoidingView
+            style={[styles.container, { backgroundColor: theme.background }]}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+            <ScrollView
+                contentContainerStyle={styles.content}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
                 <View style={[styles.iconContainer, { backgroundColor: theme.primaryLight }]}>
                     <Ionicons name="body" size={64} color={theme.primary} />
                 </View>
@@ -58,8 +65,8 @@ export default function PracticeScreen() {
                     <Ionicons name="camera" size={20} color="#fff" style={styles.buttonIcon} />
                     <Text style={styles.startButtonText}>Start Camera Session</Text>
                 </TouchableOpacity>
-            </View>
-        </View>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
 
@@ -68,7 +75,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     content: {
-        flex: 1,
+        flexGrow: 1,
         padding: 24,
         alignItems: 'center',
         justifyContent: 'center',

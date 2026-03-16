@@ -22,6 +22,7 @@ export default function PracticeCameraScreen() {
     const framesRef = useRef([]);
     const intervalRef = useRef(null);
     const timerRef = useRef(null);
+    const isRecordingRef = useRef(false);
 
     // Initial check for permissions
     useEffect(() => {
@@ -33,30 +34,45 @@ export default function PracticeCameraScreen() {
     // Cleanup on unmount
     useEffect(() => {
         return () => {
+            isRecordingRef.current = false;
             if (intervalRef.current) clearInterval(intervalRef.current);
             if (timerRef.current) clearInterval(timerRef.current);
         };
     }, []);
 
     const captureFrame = async () => {
-        if (cameraRef.current) {
-            try {
-                const photo = await cameraRef.current.takePictureAsync({
-                    quality: 0.5,
-                    base64: true,
-                    exif: false,
-                });
-                
-                if (photo && photo.base64) {
-                    framesRef.current.push(photo.base64);
-                }
-            } catch (err) {
-                console.error('Failed to capture frame:', err);
+        if (!isRecordingRef.current || !cameraRef.current) return;
+        try {
+            const photo = await cameraRef.current.takePictureAsync({
+                quality: 0.5,
+                base64: true,
+                exif: false,
+            });
+            
+            if (photo && photo.base64 && isRecordingRef.current) {
+                framesRef.current.push(photo.base64);
+            }
+        } catch (err) {
+            // Only log if we're still actively recording — ignore errors after session ends
+            if (isRecordingRef.current) {
+                console.warn('Failed to capture frame:', err);
             }
         }
     };
 
+    const stopIntervals = () => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+    };
+
     const startSession = () => {
+        isRecordingRef.current = true;
         setIsRecording(true);
         framesRef.current = []; // Reset frames
         setTimeLeft(PRACTICE_DURATION_SECONDS);
@@ -82,9 +98,13 @@ export default function PracticeCameraScreen() {
     };
 
     const finishSession = async () => {
+        // Guard against double-invocation
+        if (!isRecordingRef.current) return;
+        isRecordingRef.current = false;
+
+        // Stop intervals immediately before any async work
+        stopIntervals();
         setIsRecording(false);
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        if (timerRef.current) clearInterval(timerRef.current);
 
         if (framesRef.current.length === 0) {
             Alert.alert('Error', 'Failed to capture any frames. Please try again.');

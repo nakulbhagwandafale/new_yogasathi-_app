@@ -33,7 +33,7 @@ const PLANS = [
     {
         id: 'monthly',
         name: 'Monthly',
-        price: '₹199',
+        price: '₹1',
         period: '/month',
         icon: 'star-outline',
         color: '#1976d2',
@@ -51,7 +51,7 @@ const PLANS = [
     {
         id: 'yearly',
         name: 'Yearly',
-        price: '₹999',
+        price: '₹2',
         period: '/year',
         icon: 'diamond-outline',
         color: '#7b1fa2',
