@@ -11,6 +11,9 @@ import {
     View,
 } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AppHeader from '../components/AppHeader';
+import SideDrawer from '../components/SideDrawer';
 import { useTheme } from '../context/ThemeContext';
 import { createRazorpayPaymentLink, fetchSubscription } from '../services/supabaseClient';
 
@@ -73,8 +76,18 @@ const PLANS = [
 
 export default function PricingPage() {
     const { theme } = useTheme();
+    const insets = useSafeAreaInsets();
     const [isLoading, setIsLoading] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState(null);
+    const [drawerVisible, setDrawerVisible] = useState(false);
+
+    const bottomTabs = [
+        { name: 'Home', icon: 'home', route: '/(tabs)/home' },
+        { name: 'Dashboard', icon: 'bar-chart', route: '/(tabs)/dashboard' },
+        { name: 'Practice', icon: 'body', route: '/(tabs)/practice' },
+        { name: 'Profile', icon: 'person', route: '/(tabs)/profile' },
+        { name: 'Feedback', icon: 'chatbubble-ellipses', route: '/(tabs)/feedback' },
+    ];
 
     const handleSelectPlan = async (plan) => {
         if (plan.id === 'free_trial') return;
@@ -128,19 +141,8 @@ export default function PricingPage() {
 
     return (
         <View style={[styles.screen, { backgroundColor: theme.background }]}>
-            {/* Header */}
-            <View style={[styles.header, { backgroundColor: theme.headerBg, borderBottomColor: theme.border }]}>
-                {router.canGoBack() ? (
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Ionicons name="chevron-back" size={22} color={theme.primary} />
-                    </TouchableOpacity>
-                ) : (
-                    // Empty placeholder to keep the title centered
-                    <View style={styles.backBtn} />
-                )}
-                <Text style={[styles.headerTitle, { color: theme.text }]}>Choose Your Plan</Text>
-                <View style={{ width: 36 }} />
-            </View>
+            {/* Top Navigation Bar */}
+            <AppHeader onMenuPress={() => setDrawerVisible(true)} />
 
             <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
                 {/* Hero Section */}
@@ -228,34 +230,37 @@ export default function PricingPage() {
                     </Text>
                 </View>
             </ScrollView>
+
+            {/* Bottom Navigation Bar */}
+            <View style={[
+                styles.bottomBar,
+                {
+                    backgroundColor: theme.tabBarBg,
+                    borderTopColor: theme.border,
+                    paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
+                }
+            ]}>
+                {bottomTabs.map((tab) => (
+                    <TouchableOpacity
+                        key={tab.name}
+                        style={styles.bottomTab}
+                        onPress={() => router.replace(tab.route)}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name={tab.icon} size={22} color={theme.tabInactive} />
+                        <Text style={[styles.bottomTabLabel, { color: theme.tabInactive }]}>{tab.name}</Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+
+            {/* Side Drawer Overlay */}
+            <SideDrawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     screen: { flex: 1 },
-
-    // Header
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        borderBottomWidth: 1,
-    },
-    backBtn: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerTitle: {
-        fontSize: 17,
-        fontWeight: '700',
-        letterSpacing: 0.3,
-    },
 
     container: {
         paddingBottom: 40,
@@ -401,5 +406,23 @@ const styles = StyleSheet.create({
         fontSize: 12,
         marginLeft: 6,
         fontWeight: '500',
+    },
+
+    // Bottom Navigation Bar
+    bottomBar: {
+        flexDirection: 'row',
+        borderTopWidth: 1,
+        paddingTop: 8,
+    },
+    bottomTab: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 4,
+    },
+    bottomTabLabel: {
+        fontSize: 12,
+        fontWeight: '600',
+        marginTop: 2,
     },
 });
