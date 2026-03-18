@@ -396,3 +396,24 @@ export async function activatePaidPlan(planName) {
     }
 }
 
+export async function createRazorpayPaymentLink(planName, amountINR) {
+    try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData?.session) {
+            return { success: false, error: 'User not authenticated.', data: null };
+        }
+
+        const response = await supabase.functions.invoke('create-payment-link', {
+            body: { planName, amountINR },
+        });
+
+        if (response.error) {
+            return { success: false, error: response.error.message, data: null };
+        }
+
+        return { success: true, error: null, data: response.data };
+    } catch (err) {
+        return { success: false, error: err.message, data: null };
+    }
+}
+

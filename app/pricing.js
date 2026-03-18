@@ -10,14 +10,16 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { useTheme } from '../context/ThemeContext';
-import { activatePaidPlan } from '../services/supabaseClient';
+import { createRazorpayPaymentLink, fetchSubscription } from '../services/supabaseClient';
 
 const PLANS = [
     {
         id: 'free_trial',
         name: 'Free Trial',
         price: '₹0',
+        numericPrice: 0,
         period: '3 days',
         icon: 'leaf-outline',
         color: '#4bb543',
@@ -34,6 +36,7 @@ const PLANS = [
         id: 'monthly',
         name: 'Monthly',
         price: '₹1',
+        numericPrice: 1, // Change to 499 for production
         period: '/month',
         icon: 'star-outline',
         color: '#1976d2',
@@ -52,6 +55,7 @@ const PLANS = [
         id: 'yearly',
         name: 'Yearly',
         price: '₹2',
+        numericPrice: 2, // Change to 4999 for production
         period: '/year',
         icon: 'diamond-outline',
         color: '#7b1fa2',
@@ -79,18 +83,41 @@ export default function PricingPage() {
         setIsLoading(true);
 
         try {
-            const result = await activatePaidPlan(plan.id);
+            // 1. Generate Razorpay Payment Link securely via Edge Function
+            const linkResult = await createRazorpayPaymentLink(plan.name, plan.numericPrice);
 
-            if (!result.success) {
-                Alert.alert('Error', result.error || 'Failed to activate plan.');
+            if (!linkResult.success || !linkResult.data?.short_url) {
+                Alert.alert('Payment Error', linkResult.error || 'Could not generate payment link.');
+                setIsLoading(false);
+                setSelectedPlan(null);
                 return;
             }
 
+            // 2. Open the Razorpay link in the in-app browser
+            const paymentUrl = linkResult.data.short_url;
+            await WebBrowser.openBrowserAsync(paymentUrl);
+
+            // 3. User closed the browser. Check if the webhook successfully updated the plan.
+            const subCheck = await fetchSubscription();
+            
+            if (subCheck.success && subCheck.data) {
+                // If the webhook worked, their plan string will now match the name (e.g., "Monthly")
+                if (subCheck.data.plan === plan.name.toLowerCase() || subCheck.data.plan === plan.name) {
+                    Alert.alert(
+                        'Payment Successful! 🎉',
+                        `You are now on the ${plan.name} plan. Enjoy all premium features!`,
+                        [{ text: 'Start Exploring', onPress: () => router.replace('/(tabs)/home') }]
+                    );
+                    return; // exit safely
+                }
+            }
+            
+            // If we get here, payment failed or webhook hasn't processed yet
             Alert.alert(
-                'Plan Activated! 🎉',
-                `You are now on the ${plan.name} plan. Enjoy all premium features!`,
-                [{ text: 'Start Exploring', onPress: () => router.replace('/(tabs)/home') }]
+                'Payment Status',
+                'Your payment was either cancelled or is still processing. If successful, your plan will activate shortly.'
             );
+
         } catch (err) {
             Alert.alert('Error', 'Something went wrong. Please try again.');
         } finally {
