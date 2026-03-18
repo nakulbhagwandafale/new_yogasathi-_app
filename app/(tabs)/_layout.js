@@ -1,16 +1,30 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
-import { useState } from 'react';
-import { View } from 'react-native';
+import { router, Tabs } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Alert, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppHeader from '../../components/AppHeader';
 import SideDrawer from '../../components/SideDrawer';
 import { useTheme } from '../../context/ThemeContext';
+import { fetchSubscription } from '../../services/supabaseClient';
+import { isTrialExpired } from '../../utils/subscriptionUtils';
 
 export default function TabLayout() {
     const insets = useSafeAreaInsets();
     const { theme } = useTheme();
     const [drawerVisible, setDrawerVisible] = useState(false);
+    const [expired, setExpired] = useState(false);
+
+    useEffect(() => {
+        checkSubscription();
+    }, []);
+
+    const checkSubscription = async () => {
+        const result = await fetchSubscription();
+        if (result.success) {
+            setExpired(isTrialExpired(result.data));
+        }
+    };
 
     return (
         <View style={{ flex: 1, backgroundColor: theme.background }}>
@@ -51,8 +65,16 @@ export default function TabLayout() {
                     options={{
                         title: 'Dashboard',
                         tabBarIcon: ({ color, size }) => (
-                            <Ionicons name="bar-chart" size={size} color={color} />
+                            <Ionicons name={expired ? 'lock-closed' : 'bar-chart'} size={size} color={color} />
                         ),
+                    }}
+                    listeners={{
+                        tabPress: (e) => {
+                            if (expired) {
+                                e.preventDefault();
+                                router.push('/pricing');
+                            }
+                        },
                     }}
                 />
                 <Tabs.Screen

@@ -5,6 +5,7 @@ import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { getCurrentUser, logoutUser, fetchSubscription } from '../../services/supabaseClient';
 import { useTheme } from '../../context/ThemeContext';
 import { getSubscriptionStatus, getTrialDaysRemaining } from '../../utils/subscriptionUtils';
+import { isTrialExpired } from '../../utils/subscriptionUtils';
 
 export default function Profile() {
     const { theme } = useTheme();
@@ -61,9 +62,9 @@ export default function Profile() {
     };
 
     const settingsOptions = [
-        { icon: 'star-outline', label: 'Subscription Plans', route: '/pricing' },
-        { icon: 'settings-outline', label: 'App Settings', route: '/settings' },
-        { icon: 'help-circle-outline', label: 'Help & Support', route: '/help' },
+        { icon: 'star-outline', label: 'Subscription Plans', route: '/pricing', gated: false },
+        { icon: 'settings-outline', label: 'App Settings', route: '/settings', gated: true },
+        { icon: 'help-circle-outline', label: 'Help & Support', route: '/help', gated: false },
     ];
 
     return (
@@ -86,36 +87,36 @@ export default function Profile() {
             <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>MY JOURNEY</Text>
             <View style={styles.quickActionsContainer}>
                 <TouchableOpacity
-                    style={[styles.quickActionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-                    onPress={() => router.push('/(tabs)/dashboard')}
+                    style={[styles.quickActionCard, { backgroundColor: theme.card, borderColor: theme.border }, subStatus === 'expired' && styles.disabledCard]}
+                    onPress={() => subStatus === 'expired' ? router.push('/pricing') : router.push('/(tabs)/dashboard')}
                     activeOpacity={0.8}
                 >
-                    <View style={[styles.quickActionIconWrap, { backgroundColor: '#e0f2fe' }]}>
-                        <Ionicons name="bar-chart-outline" size={24} color="#0284c7" />
+                    <View style={[styles.quickActionIconWrap, { backgroundColor: subStatus === 'expired' ? '#f0f0f0' : '#e0f2fe' }]}>
+                        <Ionicons name={subStatus === 'expired' ? 'lock-closed' : 'bar-chart-outline'} size={24} color={subStatus === 'expired' ? '#999' : '#0284c7'} />
                     </View>
-                    <Text style={[styles.quickActionTitle, { color: theme.text }]}>Dashboard</Text>
+                    <Text style={[styles.quickActionTitle, { color: subStatus === 'expired' ? '#999' : theme.text }]}>Dashboard</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    style={[styles.quickActionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-                    onPress={() => router.push('/reflection')}
+                    style={[styles.quickActionCard, { backgroundColor: theme.card, borderColor: theme.border }, subStatus === 'expired' && styles.disabledCard]}
+                    onPress={() => subStatus === 'expired' ? router.push('/pricing') : router.push('/reflection')}
                     activeOpacity={0.8}
                 >
-                    <View style={[styles.quickActionIconWrap, { backgroundColor: '#fef3c7' }]}>
-                        <Ionicons name="journal-outline" size={24} color="#d97706" />
+                    <View style={[styles.quickActionIconWrap, { backgroundColor: subStatus === 'expired' ? '#f0f0f0' : '#fef3c7' }]}>
+                        <Ionicons name={subStatus === 'expired' ? 'lock-closed' : 'journal-outline'} size={24} color={subStatus === 'expired' ? '#999' : '#d97706'} />
                     </View>
-                    <Text style={[styles.quickActionTitle, { color: theme.text }]}>Reflection</Text>
+                    <Text style={[styles.quickActionTitle, { color: subStatus === 'expired' ? '#999' : theme.text }]}>Reflection</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    style={[styles.quickActionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-                    onPress={() => router.push('/all-reports')}
+                    style={[styles.quickActionCard, { backgroundColor: theme.card, borderColor: theme.border }, subStatus === 'expired' && styles.disabledCard]}
+                    onPress={() => subStatus === 'expired' ? router.push('/pricing') : router.push('/all-reports')}
                     activeOpacity={0.8}
                 >
-                    <View style={[styles.quickActionIconWrap, { backgroundColor: '#dcfce7' }]}>
-                        <Ionicons name="document-text-outline" size={24} color="#16a34a" />
+                    <View style={[styles.quickActionIconWrap, { backgroundColor: subStatus === 'expired' ? '#f0f0f0' : '#dcfce7' }]}>
+                        <Ionicons name={subStatus === 'expired' ? 'lock-closed' : 'document-text-outline'} size={24} color={subStatus === 'expired' ? '#999' : '#16a34a'} />
                     </View>
-                    <Text style={[styles.quickActionTitle, { color: theme.text }]}>Reports</Text>
+                    <Text style={[styles.quickActionTitle, { color: subStatus === 'expired' ? '#999' : theme.text }]}>Reports</Text>
                 </TouchableOpacity>
             </View>
 
@@ -140,21 +141,30 @@ export default function Profile() {
             <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>ACCOUNT SETTINGS</Text>
 
             <View style={styles.settingsList}>
-                {settingsOptions.map((item, index) => (
-                    <TouchableOpacity 
-                        key={index} 
-                        style={[styles.settingsItem, { borderBottomColor: theme.divider }]}
-                        onPress={() => item.route ? router.push(item.route) : null}
-                    >
-                        <View style={styles.settingsItemLeft}>
-                            <View style={[styles.settingsIconWrapper, { backgroundColor: theme.accent }]}>
-                                <Ionicons name={item.icon} size={22} color={theme.primaryLight} />
+                {settingsOptions.map((item, index) => {
+                    const isDisabled = item.gated && subStatus === 'expired';
+                    return (
+                        <TouchableOpacity 
+                            key={index} 
+                            style={[styles.settingsItem, { borderBottomColor: theme.divider }, isDisabled && styles.disabledCard]}
+                            onPress={() => {
+                                if (isDisabled) {
+                                    router.push('/pricing');
+                                } else if (item.route) {
+                                    router.push(item.route);
+                                }
+                            }}
+                        >
+                            <View style={styles.settingsItemLeft}>
+                                <View style={[styles.settingsIconWrapper, { backgroundColor: isDisabled ? '#f0f0f0' : theme.accent }]}>
+                                    <Ionicons name={isDisabled ? 'lock-closed' : item.icon} size={22} color={isDisabled ? '#999' : theme.primaryLight} />
+                                </View>
+                                <Text style={[styles.settingsLabel, { color: isDisabled ? '#999' : theme.text }]}>{item.label}</Text>
                             </View>
-                            <Text style={[styles.settingsLabel, { color: theme.text }]}>{item.label}</Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
-                    </TouchableOpacity>
-                ))}
+                            <Ionicons name="chevron-forward" size={20} color={isDisabled ? '#ccc' : theme.textMuted} />
+                        </TouchableOpacity>
+                    );
+                })}
             </View>
 
             {/* Logout */}
@@ -345,5 +355,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#e53e3e',
         fontWeight: '500',
+    },
+    disabledCard: {
+        opacity: 0.5,
     },
 });
