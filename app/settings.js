@@ -24,6 +24,8 @@ export default function Settings() {
     
     const [assessmentId, setAssessmentId] = useState(null);
     const [age, setAge] = useState('');
+    const [height, setHeight] = useState('');
+    const [weight, setWeight] = useState('');
     const [fitnessLevel, setFitnessLevel] = useState('Beginner');
     const [yogaExperience, setYogaExperience] = useState('None');
     const [healthGoal, setHealthGoal] = useState('');
@@ -43,6 +45,8 @@ export default function Settings() {
             if (result.success && result.data) {
                 setAssessmentId(result.data.id);
                 setAge(result.data.age.toString());
+                setHeight(result.data.height || '');
+                setWeight(result.data.weight || '');
                 setFitnessLevel(result.data.fitness_level || 'Beginner');
                 setYogaExperience(result.data.yoga_experience || 'None');
                 setHealthGoal(result.data.health_goal || '');
@@ -71,6 +75,8 @@ export default function Settings() {
             // 1. Prepare data
             const updateData = {
                 age: parseInt(age, 10),
+                height: height.trim(),
+                weight: weight.trim(),
                 fitness_level: fitnessLevel,
                 yoga_experience: yogaExperience,
                 health_goal: healthGoal,
@@ -153,6 +159,28 @@ export default function Settings() {
                         value={age}
                         onChangeText={setAge}
                         keyboardType="numeric"
+                        mode="outlined"
+                        style={[styles.input, { backgroundColor: theme.background }]}
+                        outlineColor={theme.border}
+                        activeOutlineColor={theme.primary}
+                        textColor={theme.text}
+                    />
+
+                    <TextInput
+                        label="Height (e.g. 5'10 or 175cm)"
+                        value={height}
+                        onChangeText={setHeight}
+                        mode="outlined"
+                        style={[styles.input, { backgroundColor: theme.background }]}
+                        outlineColor={theme.border}
+                        activeOutlineColor={theme.primary}
+                        textColor={theme.text}
+                    />
+
+                    <TextInput
+                        label="Weight (e.g. 150 lbs or 70kg)"
+                        value={weight}
+                        onChangeText={setWeight}
                         mode="outlined"
                         style={[styles.input, { backgroundColor: theme.background }]}
                         outlineColor={theme.border}

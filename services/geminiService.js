@@ -39,6 +39,8 @@ export async function generateYogaPlan(assessmentData) {
     const prompt = `
     You are an expert Yoga coach. Generate a personalized daily yoga plan for a user with the following profile:
     Age: ${assessmentData.age}
+    Height: ${assessmentData.height || 'Not provided'}
+    Weight: ${assessmentData.weight || 'Not provided'}
     Fitness Level: ${assessmentData.fitness_level}
     Yoga Experience: ${assessmentData.yoga_experience}
     Goal: ${assessmentData.health_goal}
@@ -59,6 +61,9 @@ export async function generateFoodPlan(assessmentData) {
     You are an expert Nutritionist. Generate a personalized daily food plan for a user with the following profile:
     Diet Preference: ${assessmentData.diet_preference}
     Goal: ${assessmentData.health_goal}
+    Age: ${assessmentData.age}
+    Height: ${assessmentData.height || 'Not provided'}
+    Weight: ${assessmentData.weight || 'Not provided'}
 
     Return a JSON array of meals. The response MUST strictly match this format:
     { "food_plan": [ { "meal": "Breakfast", "food": "Oatmeal", "calories": "300 kcal", "description": "Healthy oats" } ] }
