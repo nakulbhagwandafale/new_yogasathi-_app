@@ -1,19 +1,20 @@
 /**
- * Check if a free trial subscription has expired.
+ * Check if a subscription has expired (works for both free trial AND paid plans).
  * @param {object|null} subscription - The subscription object from Supabase
- * @returns {boolean} true if trial is expired or no subscription exists
+ * @returns {boolean} true if subscription is expired or no subscription exists
  */
 export function isTrialExpired(subscription) {
     if (!subscription) return true;
 
-    // Paid plans are never "trial expired"
-    if (subscription.plan !== 'free_trial') return false;
+    // If there is an expires_at date, check if it has passed
+    if (subscription.expires_at) {
+        const now = new Date();
+        const expiresAt = new Date(subscription.expires_at);
+        return now > expiresAt;
+    }
 
-    if (!subscription.expires_at) return false;
-
-    const now = new Date();
-    const expiresAt = new Date(subscription.expires_at);
-    return now > expiresAt;
+    // No expiry date set — treat as active (legacy behavior)
+    return false;
 }
 
 /**
@@ -24,20 +25,23 @@ export function isTrialExpired(subscription) {
 export function getSubscriptionStatus(subscription) {
     if (!subscription) return 'none';
 
+    const expired = isTrialExpired(subscription);
+
     if (subscription.plan === 'free_trial') {
-        return isTrialExpired(subscription) ? 'expired' : 'trial';
+        return expired ? 'expired' : 'trial';
     }
 
-    return subscription.is_active ? 'active' : 'expired';
+    // Paid plans: check expiry
+    return expired ? 'expired' : 'active';
 }
 
 /**
- * Get remaining trial days.
+ * Get remaining days on any subscription (trial or paid).
  * @param {object|null} subscription
- * @returns {number} days remaining (0 if expired)
+ * @returns {number} days remaining (0 if expired or no expiry date)
  */
 export function getTrialDaysRemaining(subscription) {
-    if (!subscription || subscription.plan !== 'free_trial' || !subscription.expires_at) return 0;
+    if (!subscription || !subscription.expires_at) return 0;
 
     const now = new Date();
     const expiresAt = new Date(subscription.expires_at);

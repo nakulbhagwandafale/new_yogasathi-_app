@@ -352,6 +352,15 @@ export async function activatePaidPlan(planName) {
         const userId = await getAuthUserId();
         if (!userId) return { success: false, error: 'User not authenticated.', data: null };
 
+        // Calculate expiry based on plan
+        const now = new Date();
+        let expiresAt;
+        if (planName.toLowerCase() === 'yearly') {
+            expiresAt = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000); // 365 days
+        } else {
+            expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
+        }
+
         // Check if a subscription row already exists
         const existing = await supabase
             .from('subscriptions')
@@ -367,8 +376,8 @@ export async function activatePaidPlan(planName) {
                 .from('subscriptions')
                 .update({
                     plan: planName,
-                    started_at: new Date().toISOString(),
-                    expires_at: null, // paid plans don't expire
+                    started_at: now.toISOString(),
+                    expires_at: expiresAt.toISOString(),
                     is_active: true,
                 })
                 .eq('id', existing.data.id)
@@ -383,8 +392,8 @@ export async function activatePaidPlan(planName) {
                 .insert([{
                     user_id: userId,
                     plan: planName,
-                    started_at: new Date().toISOString(),
-                    expires_at: null,
+                    started_at: now.toISOString(),
+                    expires_at: expiresAt.toISOString(),
                     is_active: true,
                 }])
                 .select()

@@ -31,12 +31,11 @@ export default function Profile() {
             setSubStatus(getSubscriptionStatus(sub));
             setSubPlanName(
                 sub.plan === 'free_trial' ? 'Free Trial' :
-                sub.plan === 'monthly' ? 'Monthly Premium' :
-                sub.plan === 'yearly' ? 'Yearly Premium' : 'Unknown Plan'
+                sub.plan === 'monthly' || sub.plan === 'Monthly' ? 'Monthly Premium' :
+                sub.plan === 'yearly' || sub.plan === 'Yearly' ? 'Yearly Premium' : 'Premium Plan'
             );
-            if (sub.plan === 'free_trial') {
-                setTrialDays(getTrialDaysRemaining(sub));
-            }
+            // Show remaining days for any plan with an expiry date
+            setTrialDays(getTrialDaysRemaining(sub));
         } else {
             setSubPlanName('Free Plan');
             setSubStatus('expired');
@@ -53,8 +52,17 @@ export default function Profile() {
                     text: 'Logout',
                     style: 'destructive',
                     onPress: async () => {
-                        await logoutUser();
-                        router.replace('/login');
+                        try {
+                            await logoutUser();
+                            // dismissAll clears the tab stack so replace works properly
+                            if (router.canDismiss()) {
+                                router.dismissAll();
+                            }
+                            router.replace('/login');
+                        } catch (e) {
+                            // Fallback navigation if replace fails from inside tabs
+                            router.replace('/login');
+                        }
                     },
                 },
             ]
